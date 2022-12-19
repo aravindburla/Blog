@@ -4,6 +4,7 @@ package com.blog.controllers;
 import com.blog.payloads.ApiResponse;
 import com.blog.payloads.CategoryDto;
 import com.blog.payloads.PostDto;
+import com.blog.payloads.PostResponse;
 import com.blog.services.PostService;
 import com.mysql.cj.x.protobuf.Mysqlx;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,12 +48,14 @@ public class PostController {
 
     //get all posts
     @GetMapping("/posts")
-    public ResponseEntity<List<PostDto>> getAllPost(
+    public ResponseEntity<PostResponse> getAllPost(
             @RequestParam(value = "pageNumber", defaultValue = "0", required = false) Integer pageNumber,
-            @RequestParam(value = "pageSize", defaultValue = "10", required = false) Integer pageSize
+            @RequestParam(value = "pageSize", defaultValue = "10", required = false) Integer pageSize,
+            @RequestParam(value = "sortBy" , defaultValue = "postId", required = false) String sortBy,
+            @RequestParam(value = "sortDir", defaultValue = "asc" , required = false) String sortDir
     ){
-        List<PostDto> allPost = postService.getAllPost(pageNumber, pageSize);
-        return new ResponseEntity<List<PostDto>>(allPost,HttpStatus.OK);
+        PostResponse postResponse = postService.getAllPost(pageNumber, pageSize, sortBy, sortDir);
+        return new ResponseEntity<PostResponse>(postResponse,HttpStatus.OK);
     }
 
     //get post by id
@@ -73,5 +76,14 @@ public class PostController {
     public ResponseEntity<PostDto> updatePost(@RequestBody PostDto postDto,  @PathVariable Integer postId){
         PostDto updatedPost = postService.updatePost(postDto,postId);
         return new ResponseEntity<PostDto>(updatedPost, HttpStatus.OK);
+    }
+
+    //search
+    @GetMapping("/posts/search/{keywords}")
+    public ResponseEntity<List<PostDto>> searchPostByTitle(
+            @PathVariable("keywords") String keywords
+    ){
+        List<PostDto> result = postService.searchPosts(keywords);
+        return new ResponseEntity<List<PostDto>>(result,HttpStatus.OK);
     }
 }
