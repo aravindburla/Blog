@@ -10,6 +10,9 @@ import com.blog.repositories.PostRepo;
 import com.blog.repositories.UserRepo;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -44,25 +47,28 @@ public class PostServiceImpl implements PostService{
         return modelMapper.map(newPost, PostDto.class);
     }
 
-    @Override
-    public PostDto createPost(PostDto postDto) {
-
-        return null;
-    }
 
     @Override
     public PostDto updatePost(PostDto postDto, Integer postId) {
-        return null;
+        Post post = postRepo.findById(postId).orElseThrow(() -> new ResourceNotFoundException("Post", "PostId", postId));
+        post.setTitle(postDto.getTitle());
+        post.setContent(postDto.getContent());
+        post.setImageName(postDto.getImageName());
+        Post updatedPost = postRepo.save(post);
+        return modelMapper.map(updatedPost,PostDto.class);
     }
 
     @Override
     public void deletePost(Integer postId) {
-
+        Post post = postRepo.findById(postId).orElseThrow(() -> new ResourceNotFoundException("Post", "PostId", postId));
+        postRepo.delete(post);
     }
 
     @Override
-    public List<PostDto> getAllPost() {
-        List<Post> allPosts = postRepo.findAll();
+    public List<PostDto> getAllPost(Integer pageNumber , Integer pageSize) {
+        Pageable p = PageRequest.of(pageNumber, pageSize);
+        Page<Post> pagePost = postRepo.findAll(p);
+        List<Post> allPosts = pagePost.getContent();
         List<PostDto> postDtos = allPosts.stream().map(post -> modelMapper.map(post, PostDto.class)).collect(Collectors.toList());
         return postDtos;
     }
